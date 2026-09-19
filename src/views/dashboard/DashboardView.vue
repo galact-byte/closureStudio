@@ -17,6 +17,7 @@
         <QQBindingStatus />
       </div>
       <IndexStatus />
+      <PublicAnnouncements />
       <div class="text-2xl font-bold">
         我的托管（{{ userGameList.length }} 已用 / {{ MAX_GAME_SLOTS }} 槽位）
       </div>
@@ -48,6 +49,7 @@ import { useRouter } from "vue-router";
 import type { ApiSystemConfig, GameAccountForm } from "@/shared/types/api";
 import { MAX_GAME_SLOTS } from "@/constants/game";
 import IndexStatus from "@/components/dashboard/VersionStatus.vue";
+import PublicAnnouncements from "@/components/dashboard/PublicAnnouncements.vue";
 import GameList from "@/components/dashboard/GameList.vue";
 import QQBindingStatus from "@/components/dashboard/QQBindingStatus.vue";
 import YouMayKnow from "@/components/dashboard/dialogs/YouMayKnow.vue";

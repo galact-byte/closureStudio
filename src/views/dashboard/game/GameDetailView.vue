@@ -73,6 +73,19 @@
         </div>
       </details>
 
+      <details
+        :key="`scheduling-${account}`"
+        class="collapse collapse-arrow s-card min-w-0 p-0! lg:order-5 lg:col-span-2"
+        @toggle="schedulingOpen = ($event.target as HTMLDetailsElement).open"
+      >
+        <summary class="collapse-title min-h-0 py-4! pr-12! pl-3! md:py-5! md:pl-5!">
+          <h2 class="text-xl font-bold">排班建议（有限技能支持）</h2>
+        </summary>
+        <div class="collapse-content px-3! pb-4! md:px-5! md:pb-5!">
+          <BaseSchedulingPanel :key="account" :source="schedulingSource" :active="schedulingOpen" />
+        </div>
+      </details>
+
       <!-- 4. 道具卡片 -->
       <details
         :key="`items-${account}`"
@@ -99,6 +112,8 @@
 </template>
 
 <script setup lang="ts">
+import BaseSchedulingPanel from '@/components/dashboard/game/BaseSchedulingPanel.vue';
+import type { SchedulingRosterSource } from '@/utils/baseSchedulingInput';
 import CharsPanel from "@/components/dashboard/game/CharsPanel.vue";
 import ConfigPanel from "@/components/dashboard/game/ConfigPanel.vue";
 import GameDetailHeader from "@/components/dashboard/game/GameDetailHeader.vue";
@@ -150,6 +165,8 @@ const activeGameTitle = computed(() =>
 
 // 游戏详情
 const details = ref<ApiGameDetail | null>(null);
+const schedulingSource = ref<SchedulingRosterSource | null>(null);
+const schedulingOpen = ref(false);
 const isLoadingGameDetails = ref(false);
 const gameDetailsError = ref(false);
 let detailsRequestId = 0;
@@ -199,6 +216,7 @@ useSwipeNavigation({
 const getGameDetails = async (preserveCurrent = false) => {
   const requestId = ++detailsRequestId;
   const requestAccount = account.value;
+  schedulingSource.value = null;
   if (!preserveCurrent) details.value = null;
   gameDetailsError.value = false;
   isLoadingGameDetails.value = false;
@@ -208,6 +226,7 @@ const getGameDetails = async (preserveCurrent = false) => {
   try {
     const res = await apiClient.fetchGameDetails(requestAccount);
     if (requestId !== detailsRequestId || requestAccount !== account.value) return;
+    schedulingSource.value = { status: 'received', response: res };
     if (res.data) {
       details.value = res.data;
     } else {
@@ -217,6 +236,7 @@ const getGameDetails = async (preserveCurrent = false) => {
   } catch (error) {
     if (requestId !== detailsRequestId || requestAccount !== account.value) return;
     gameDetailsError.value = true;
+    schedulingSource.value = { status: 'request-failed' };
     console.error("Failed to fetch game details:", error);
   } finally {
     if (requestId === detailsRequestId && requestAccount === account.value) {

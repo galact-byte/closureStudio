@@ -36,9 +36,3 @@ ArknightsGamedataPure
 .codex
 .serena
 .codegraph
-
-# Local AI workspace configuration
-CLAUDE.md
-GEMINI.md
-AGENTS.md
-.omc/

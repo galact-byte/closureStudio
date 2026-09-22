@@ -12,6 +12,37 @@ test('无配置不请求；失败保留快照并可重试', async () => {
   jest.mocked(loadAnnouncements).mockRejectedValueOnce(new Error('offline')); await state.load(); expect(state.status.value).toBe('stale'); expect(state.data.value).not.toBeNull();
   await state.load(); expect(state.status.value).toBe('ready'); scope.stop();
 });
+test('半日采集加一小时宽限后才陈旧，持续打开页面也会更新', async () => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date('2026-09-22T00:00:00Z'));
+  const scope = effectScope();
+  try {
+    const state = scope.run(() => usePublicAnnouncements('https://public.test'))!;
+    jest.mocked(loadAnnouncements).mockResolvedValue({...value(), lastAttemptAt: null});
+    await state.load();
+    jest.advanceTimersByTime(12 * 3600_000);
+    expect(state.status.value).toBe('ready');
+    jest.advanceTimersByTime(3600_000);
+    expect(state.status.value).toBe('ready');
+    jest.advanceTimersByTime(60_000);
+    expect(state.status.value).toBe('stale');
+    expect(loadAnnouncements).toHaveBeenCalledTimes(1);
+  } finally {
+    scope.stop();
+    jest.useRealTimers();
+  }
+});
+
+test.each(['partial', 'stale', 'unavailable'] as const)('本地宽限不覆盖服务端的 %s 状态', async status => {
+  const scope = effectScope();
+  try {
+    const state = scope.run(() => usePublicAnnouncements('https://public.test'))!;
+    jest.mocked(loadAnnouncements).mockResolvedValue({...value(), lastAttemptAt: null, status});
+    await state.load();
+    expect(state.status.value).toBe(status);
+  } finally { scope.stop(); }
+});
+
 test('过期及旧响应、卸载后响应不覆盖', async () => {
   const scope = effectScope(); const state = scope.run(() => usePublicAnnouncements('https://public.test'))!;
   let done!: (v: PublicSnapshot) => void;

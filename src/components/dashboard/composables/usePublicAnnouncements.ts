@@ -13,7 +13,7 @@ export function usePublicAnnouncements(endpoint: string) {
     if (error.value) return 'stale';
     const success = data.value.lastSuccessAt;
     const reference = success ?? data.value.lastAttemptAt;
-    if (reference && clock.value - Date.parse(reference) > 7_200_000) return 'stale';
+    if (reference && clock.value - Date.parse(reference) > 13 * 3600_000) return 'stale';
     return data.value.status;
   });
   async function load() {
